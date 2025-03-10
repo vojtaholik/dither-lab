@@ -1,0 +1,135 @@
+You are an expert in WebGL, GLSL, Three.js, and real-time image processing.  
+This project is a **WebGL-based real-time dithering application** using **Three.js**.  
+Follow these rules **strictly** when assisting with this project.
+
+---
+
+## **GENERAL RULES**
+
+- **DO NOT** generate imperative DOM manipulation code; always use **React functional components**.
+- **DO NOT** use class components; prefer hooks (`useRef`, `useEffect`, `useState`).
+- **ALWAYS** use Three.js for rendering; DO NOT manipulate `canvas` directly.
+- **ALWAYS** use `useRef` for WebGL renderer, scene, camera, and objects.
+- **DO NOT** modify global state unless explicitly required.
+
+---
+
+## **THREE.JS / WEBGL RULES**
+
+- **Use WebGLRenderer**:
+  - Configure with `preserveDrawingBuffer: true` to allow image saving.
+  - Ensure `antialias` is **disabled** (dithering already controls pixel effects).
+- **Shaders & Materials**:
+
+  - Always use `ShaderMaterial` for dithering effects.
+  - **DO NOT** use `MeshStandardMaterial` or `MeshBasicMaterial`.
+  - Pass image data as a **texture uniform** to the shader.
+  - Optimize shaders by **minimizing conditional logic**.
+
+- **Performance Best Practices**:
+  - **NEVER** re-upload textures every frame (`needsUpdate = true` only once).
+  - Always dispose of unused WebGL objects (textures, geometries, materials).
+  - Use **small textures** for threshold patterns (e.g., 8x8 Bayer).
+  - **NEVER** use floating-point textures unless necessary (use `RGBFormat`).
+
+---
+
+## **GLSL SHADER RULES**
+
+- **Follow Shader Optimization Guidelines**:
+
+  - **Use `mediump` precision** unless `highp` is required.
+  - **Avoid loops in shaders** (use precomputed textures if needed).
+  - **Minimize branching (`if` statements)**; prefer mathematical approximations.
+  - **Use `vec3` for color calculations** instead of `vec4` where possible.
+
+- **Shader Uniforms**:
+
+  - The image should be passed as **sampler2D uniform**.
+  - Threshold values should be in **normalized range `[0.0, 1.0]`**.
+  - Grid coordinates (`gl_FragCoord.xy`) should be **scaled appropriately** for dithering patterns.
+
+- **Dithering Algorithms**:
+  - **Bayer Dithering (Ordered)**:
+    - Use a **hardcoded 8x8 threshold matrix**.
+    - Lookup via **modulus of `gl_FragCoord.xy`**.
+  - **Random Noise Dithering**:
+    - Generate noise using a **simple hash function**.
+  - **Simulated Floyd-Steinberg**:
+    - If necessary, simulate error diffusion using **blue noise**.
+
+---
+
+## **DITHERING ALGORITHMS**
+
+- **List of supported dithering algorithms**:
+  - Bayer Ordered (2x2, 4x4, 8x8)
+  - Random Noise Dithering
+  - Blue Noise Dithering (optional)
+  - Simulated Error Diffusion (without loops)
+- **Dithering Behavior**:
+  - The image should always **convert to grayscale before dithering**.
+  - Dithering should work **in real-time** and **support interactive controls**.
+  - Output should be **black/white or a fixed color palette**.
+
+---
+
+## **SVG EXPORT RULES**
+
+- **SVG must be optimized**:
+
+  - Merge **adjacent pixels into larger rectangles**.
+  - **Only include black pixels** (`fill="black"`).
+  - Ensure **correct coordinate system (top-left origin)**.
+  - Output resolution should match the WebGL render output.
+
+- **SVG File Size Optimization**:
+  - Prefer horizontal merging first, then vertical merging.
+  - If performance allows, apply **further rectangular merging**.
+
+---
+
+## **IMAGE EXPORT RULES**
+
+- **PNG Export**:
+
+  - Must use `canvas.toDataURL("image/png")` from the **WebGL-rendered canvas**.
+  - Must capture the **dithered image output, not the original image**.
+  - Ensure the **color space remains accurate**.
+
+- **DO NOT**:
+  - Use HTML `<canvas>` drawing for processing (must use WebGL).
+  - Use JS-based dithering (everything must be done in shaders).
+  - Modify images using `<img>` elements.
+
+---
+
+## **ERROR HANDLING**
+
+- **GLSL Errors**:
+
+  - Shader compilation errors should be handled via `onError`.
+  - Log GLSL errors clearly in the console.
+
+- **File Handling Errors**:
+  - Ensure image uploads work with **PNG and JPG only**.
+  - Check for **corrupt or unreadable image files**.
+
+---
+
+## **DO NOT ALLOW**
+
+🚫 No imperative DOM manipulation.  
+🚫 No vanilla JS image manipulation (`CanvasRenderingContext2D`).  
+🚫 No `setTimeout` or `setInterval` for rendering (use requestAnimationFrame).  
+🚫 No inline styles; use CSS classes.  
+🚫 No class components.  
+🚫 No `useState` for WebGL objects.
+
+---
+
+**FINAL NOTES**:
+
+- When modifying shaders, follow **minimal branching and optimized GPU calculations**.
+- Always **test performance at 512x512 resolution** before allowing higher sizes.
+- Ensure WebGL memory is **cleaned up properly** to prevent memory leaks.
