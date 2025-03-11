@@ -20,6 +20,7 @@ type DitheringAppProps = {
 
 const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [algorithm, setAlgorithm] = useState<DitheringAlgorithm>("bayer");
   const [threshold, setThreshold] = useState(0.5);
   const [backgroundColor, setBackgroundColor] = useState("#000000");
@@ -102,6 +103,8 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type.match("image.*")) {
+        setUploadedFile(file);
+
         const reader = new FileReader();
         reader.onload = (event) => {
           const img = new Image();
@@ -151,7 +154,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             </div>
           )}
         </div>
-        <div className="w-full max-w-sm  bg-gray-900 p-5 border border-white/5">
+        <div className="w-full max-w-sm  bg-gray-900 px-6 border-l border-white/10">
           <DitherControls
             algorithm={algorithm}
             threshold={threshold}
@@ -165,6 +168,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             onExportSVG={handleExportSVG}
             onImageLoad={handleImageLoad}
             isSvgExporting={isSvgExporting}
+            externalFile={uploadedFile}
           />
         </div>
       </div>

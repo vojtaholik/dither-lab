@@ -1,18 +1,48 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 type ImageUploaderProps = {
   onImageLoad: (image: HTMLImageElement) => void;
+  externalFile?: File | null; // Add prop for external file
 };
 
-const ImageUploader = ({ onImageLoad }: ImageUploaderProps) => {
+const ImageUploader = ({ onImageLoad, externalFile }: ImageUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
+
+  // Cleanup object URL when component unmounts or when URL changes
+  useEffect(() => {
+    return () => {
+      if (imageUrl && imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
+
+  // Handle external file changes
+  useEffect(() => {
+    if (externalFile && externalFile !== currentFile) {
+      // Create object URL for background image
+      const objectUrl = URL.createObjectURL(externalFile);
+      setImageUrl(objectUrl);
+      setCurrentFile(externalFile);
+
+      // Process the file
+      loadImageFile(externalFile);
+    }
+  }, [externalFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Create object URL for background image
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+    setCurrentFile(file);
 
     loadImageFile(file);
   };
@@ -55,9 +85,17 @@ const ImageUploader = ({ onImageLoad }: ImageUploaderProps) => {
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
+      // Create object URL for background image
+      const objectUrl = URL.createObjectURL(files[0]);
+      setImageUrl(objectUrl);
+      setCurrentFile(files[0]);
+
       loadImageFile(files[0]);
     }
   };
+
+  // Get the filename to display
+  const filename = currentFile?.name || fileInputRef.current?.files?.[0]?.name;
 
   return (
     <div className="mb-4">
@@ -71,24 +109,38 @@ const ImageUploader = ({ onImageLoad }: ImageUploaderProps) => {
       />
       <label
         htmlFor="image-upload"
-        className={`px-4 py-2 aspect-video w-full flex items-center justify-center ${
+        className={`relative px-4 py-2 aspect-video flex-col w-full flex items-center justify-center ${
           isDraggingOver
             ? "bg-gray-400 text-gray-900"
             : "bg-gray-200 text-gray-800"
-        } rounded cursor-pointer hover:bg-gray-300 bg-white/5 text-white border-dashed transition-colors duration-200 border ${
+        } cursor-pointer hover:bg-white/10 bg-white/5 text-white border-dashed transition-colors duration-200 border ${
           isDraggingOver ? "border-white" : "border-gray-700"
         }`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        style={{
+          backgroundImage: imageUrl
+            ? `url(${imageUrl})`
+            : `url(${process.env.NEXT_PUBLIC_DEFAULT_IMAGE_URL})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
-        {isDraggingOver ? "Drop Image Here" : "Upload Image"}
+        <span className="text-sm absolute left-2 bottom-2 bg-black/50 px-2 py-1 rounded">
+          {!filename && (
+            <>{isDraggingOver ? "Drop Image Here" : "Upload Image"}</>
+          )}
+        </span>
+        {filename && (
+          <span className="text-sm absolute left-2 bottom-2 truncate max-w-[calc(100%-2rem)] bg-black/50 px-2 py-1 rounded">
+            {filename}
+          </span>
+        )}
       </label>
       {/* filename */}
-      <p className="text-sm text-gray-500">
-        {fileInputRef.current?.files?.[0]?.name}
-      </p>
+      {/* {filename && <p className="text-sm text-gray-500 mt-1">{filename}</p>} */}
     </div>
   );
 };
