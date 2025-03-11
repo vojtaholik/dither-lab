@@ -24,6 +24,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const [threshold, setThreshold] = useState(0.5);
   const [backgroundColor, setBackgroundColor] = useState("#000000");
   const [foregroundColor, setForegroundColor] = useState("#ffffff");
+  const [isDragging, setIsDragging] = useState(false);
   const canvasRef = useRef<{
     saveImage: () => void;
     exportSVG: () => void;
@@ -71,11 +72,67 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
     canvasRef.current?.exportSVG();
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.match("image.*")) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            handleImageLoad(img);
+          };
+          img.src = event.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
   // Get the SVG exporting state for the UI
   const isSvgExporting = canvasRef.current?.isSvgExporting || false;
 
   return (
-    <div className="w-full">
+    <div
+      className={`w-full ${isDragging ? "drag-active" : ""}`}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-gray-800/80 p-8 rounded-lg border-2 border-dashed border-white/70">
+            <p className="text-white text-xl font-bold">Drop image to dither</p>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-center">
         <div className="w-full flex justify-center items-center h-screen">
           {image ? (

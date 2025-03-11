@@ -50,3 +50,32 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Drag and drop styles */
+.drag-active {
+  position: relative;
+}
+
+.drag-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px dashed white;
+  border-radius: 8px;
+  z-index: 10;
+  pointer-events: none;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 1);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+}
