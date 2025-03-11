@@ -729,7 +729,7 @@ const DitheringCanvas = forwardRef(
       isSvgExporting,
     }));
 
-    return <div ref={canvasRef} className="" />;
+    return <div ref={canvasRef} />;
   }
 );
 

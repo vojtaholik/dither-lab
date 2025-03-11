@@ -136,7 +136,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
           </div>
         </div>
       )}
-      <div className="flex items-center justify-center">
+      <div className="flex md:flex-row flex-col items-center justify-center">
         <div className="w-full flex justify-center items-center h-screen">
           {image ? (
             <DitheringCanvas
@@ -149,9 +149,21 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
               shaders={shaders}
             />
           ) : (
-            <div className="flex items-center justify-center h-64 rounded-lg border border-gray-300 w-full">
-              <p className="text-gray-500">Loading default image...</p>
-            </div>
+            <p className="animate-pulse flex flex-row gap-2 items-center justify-center w-full h-full">
+              <svg
+                width={24}
+                height={24}
+                viewBox="0 0 8 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.04869 0H3.31256V2.20837H4.04869V0ZM4.04869 5.15287H3.31256V7.36125H4.04869V5.15287ZM7.36125 3.31256V4.04869H5.15287V3.31256H7.36125ZM2.20837 4.04869V3.31256H0V4.04869H2.20837ZM4.78481 1.84031H5.52094V2.57644H4.78481V1.84031ZM6.25706 1.10419H5.52094V1.84031H6.25706V1.10419ZM2.57644 1.84031H1.84031V2.57644H2.57644V1.84031ZM1.10419 1.10419H1.84031V1.84031H1.10419V1.10419ZM4.78481 5.52094H5.52094V6.25706H6.25706V5.52094H5.52094V4.78481H4.78481V5.52094ZM1.84031 5.52094V4.78481H2.57644V5.52094H1.84031V6.25706H1.10419V5.52094H1.84031Z"
+                  fill="currentColor"
+                />
+              </svg>
+              Loading...
+            </p>
           )}
         </div>
         <div className="w-full max-w-sm  bg-gray-900 px-6 border-l border-white/10">

@@ -134,7 +134,7 @@ const DitherControls = ({
           </div>
         </div>
       </fieldset>
-      <div className="flex gap-2 flex-col">
+      <div className="flex gap-2 flex-col pt-5">
         <Button onClick={onSaveImage}>Save Image</Button>
         <Button
           variant="secondary"

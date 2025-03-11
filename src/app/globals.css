@@ -5,6 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  color-scheme: dark;
   /* Neutral grayscale variables */
   --gray-50: #fafafa;
   --gray-100: #f5f5f5;

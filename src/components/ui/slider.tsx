@@ -4,6 +4,7 @@ import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { cn } from "@/lib/utils";
+import { EffectCorners } from "./select";
 
 function Slider({
   className,
@@ -48,6 +49,7 @@ function Slider({
         {label && (
           <div className="absolute left-1 text-sm text-black z-10">{label}</div>
         )}
+        <EffectCorners />
         <SliderPrimitive.Range
           data-slot="slider-range"
           className={cn(
