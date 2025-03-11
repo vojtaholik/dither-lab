@@ -157,7 +157,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
         </div>
       )}
       <div className="md:grid flex flex-col grid-cols-12 w-full h-full">
-        <div className="w-full md:static sticky top-0 z-50 md:col-span-8 md:min-h-screen lg:col-span-9 p-4 flex items-center justify-center">
+        <div className="w-full z-50 md:col-span-8 md:min-h-screen lg:col-span-9 p-4 flex items-center justify-center">
           {image ? (
             <DitheringCanvas
               ref={canvasRef}
