@@ -1,6 +1,6 @@
 # Dither Lab
 
-<img width="1266" alt="image" src="https://github.com/user-attachments/assets/90cb57ce-6c53-4827-92bb-2a4649c6df83" />
+<img width="1356" alt="image" src="https://github.com/user-attachments/assets/32a75c91-43a8-4857-9f0d-676d2482d1e3" />
 
 ---
 
