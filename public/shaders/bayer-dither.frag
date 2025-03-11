@@ -2,6 +2,8 @@ precision mediump float;
 
 uniform sampler2D uTexture;
 uniform float uThreshold; // Dithering intensity
+uniform vec3 uBackgroundColor; // Background color
+uniform vec3 uForegroundColor; // Foreground color
 varying vec2 vUv;
 
 // 8x8 Bayer threshold matrix as a 1D array
@@ -32,5 +34,10 @@ void main() {
 
     // Apply dithering
     float dithered = step(threshold + (1.0 - uThreshold), gray);
-    gl_FragColor = vec4(vec3(dithered), 1.0);
+    
+    // Mix between background color and foreground color based on dithered value
+    // When dithered is 0, use background color; when dithered is 1, use foreground color
+    vec3 finalColor = mix(uBackgroundColor, uForegroundColor, dithered);
+    
+    gl_FragColor = vec4(finalColor, 1.0);
 }

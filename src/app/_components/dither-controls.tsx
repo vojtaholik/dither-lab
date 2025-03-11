@@ -5,8 +5,12 @@ import { DitheringAlgorithm } from "./utils/shader-loader";
 type DitherControlsProps = {
   algorithm: DitheringAlgorithm;
   threshold: number;
+  backgroundColor: string;
+  foregroundColor: string;
   onAlgorithmChange: (algorithm: DitheringAlgorithm) => void;
   onThresholdChange: (threshold: number) => void;
+  onBackgroundColorChange: (color: string) => void;
+  onForegroundColorChange: (color: string) => void;
   onSaveImage: () => void;
   onExportSVG: () => void;
 };
@@ -14,8 +18,12 @@ type DitherControlsProps = {
 const DitherControls = ({
   algorithm,
   threshold,
+  backgroundColor,
+  foregroundColor,
   onAlgorithmChange,
   onThresholdChange,
+  onBackgroundColorChange,
+  onForegroundColorChange,
   onSaveImage,
   onExportSVG,
 }: DitherControlsProps) => {
@@ -50,6 +58,59 @@ const DitherControls = ({
           onChange={(e) => onThresholdChange(parseFloat(e.target.value))}
           className="w-full"
         />
+      </div>
+
+      <div>
+        <label className="block mb-2 font-medium">Background Color</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={backgroundColor}
+            onChange={(e) => {
+              console.log("Color picker changed to:", e.target.value);
+              onBackgroundColorChange(e.target.value);
+            }}
+            className="w-10 h-10 border rounded cursor-pointer"
+          />
+          <input
+            type="text"
+            value={backgroundColor}
+            onChange={(e) => {
+              console.log("Text input changed to:", e.target.value);
+              onBackgroundColorChange(e.target.value);
+            }}
+            className="flex-1 p-2 border rounded"
+            placeholder="#000000"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block mb-2 font-medium">Foreground Color (SVG)</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={foregroundColor}
+            onChange={(e) => {
+              console.log(
+                "Foreground color picker changed to:",
+                e.target.value
+              );
+              onForegroundColorChange(e.target.value);
+            }}
+            className="w-10 h-10 border rounded cursor-pointer"
+          />
+          <input
+            type="text"
+            value={foregroundColor}
+            onChange={(e) => {
+              console.log("Foreground text input changed to:", e.target.value);
+              onForegroundColorChange(e.target.value);
+            }}
+            className="flex-1 p-2 border rounded"
+            placeholder="#ffffff"
+          />
+        </div>
       </div>
 
       <button

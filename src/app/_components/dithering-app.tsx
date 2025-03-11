@@ -22,6 +22,8 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [algorithm, setAlgorithm] = useState<DitheringAlgorithm>("bayer");
   const [threshold, setThreshold] = useState(0.5);
+  const [backgroundColor, setBackgroundColor] = useState("#000000");
+  const [foregroundColor, setForegroundColor] = useState("#ffffff");
   const canvasRef = useRef<{
     saveImage: () => void;
     exportSVG: () => void;
@@ -51,6 +53,14 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
     setThreshold(value);
   };
 
+  const handleBackgroundColorChange = (color: string) => {
+    setBackgroundColor(color);
+  };
+
+  const handleForegroundColorChange = (color: string) => {
+    setForegroundColor(color);
+  };
+
   const handleSaveImage = () => {
     canvasRef.current?.saveImage();
   };
@@ -69,6 +79,8 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
               image={image}
               algorithm={algorithm}
               threshold={threshold}
+              backgroundColor={backgroundColor}
+              foregroundColor={foregroundColor}
               shaders={shaders}
             />
           ) : (
@@ -82,8 +94,12 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
           <DitherControls
             algorithm={algorithm}
             threshold={threshold}
+            backgroundColor={backgroundColor}
+            foregroundColor={foregroundColor}
             onAlgorithmChange={handleAlgorithmChange}
             onThresholdChange={handleThresholdChange}
+            onBackgroundColorChange={handleBackgroundColorChange}
+            onForegroundColorChange={handleForegroundColorChange}
             onSaveImage={handleSaveImage}
             onExportSVG={handleExportSVG}
           />

@@ -2,6 +2,8 @@ precision mediump float;
 
 uniform sampler2D uTexture;
 uniform float uThreshold;
+uniform vec3 uBackgroundColor; // Background color
+uniform vec3 uForegroundColor; // Foreground color
 varying vec2 vUv;
 
 // Hash function for blue noise
@@ -30,5 +32,8 @@ void main() {
     float adjustedThreshold = mix(0.0, 1.0, uThreshold);
     float dithered = step(noise * adjustedThreshold, gray);
     
-    gl_FragColor = vec4(vec3(dithered), 1.0);
+    // Mix between background color and foreground color based on dithered value
+    vec3 finalColor = mix(uBackgroundColor, uForegroundColor, dithered);
+    
+    gl_FragColor = vec4(finalColor, 1.0);
 } 

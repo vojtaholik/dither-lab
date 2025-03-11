@@ -14,6 +14,8 @@ type DitheringCanvasProps = {
   image: HTMLImageElement | null;
   algorithm: DitheringAlgorithm;
   threshold: number;
+  backgroundColor: string;
+  foregroundColor: string;
   shaders: {
     vertex: string;
     bayer: string;
@@ -26,8 +28,31 @@ type DitheringCanvasProps = {
 // Maximum width for the rendered image
 const MAX_WIDTH = 1000;
 
+// Helper function to parse hex color to RGB
+const parseHexColor = (hexColor: string) => {
+  // Remove # if present
+  const hex = hexColor.startsWith("#") ? hexColor.slice(1) : hexColor;
+
+  // Parse the hex values
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+  return new THREE.Color(r, g, b);
+};
+
 const DitheringCanvas = forwardRef(
-  ({ image, algorithm, threshold, shaders }: DitheringCanvasProps, ref) => {
+  (
+    {
+      image,
+      algorithm,
+      threshold,
+      backgroundColor,
+      foregroundColor,
+      shaders,
+    }: DitheringCanvasProps,
+    ref
+  ) => {
     const canvasRef = useRef<HTMLDivElement>(null);
     const renderer = useRef<THREE.WebGLRenderer | null>(null);
     const scene = useRef<THREE.Scene | null>(null);
@@ -70,7 +95,8 @@ const DitheringCanvas = forwardRef(
           renderer.current = new THREE.WebGLRenderer({
             preserveDrawingBuffer: true,
             antialias: false,
-          }); // Allow saving image
+            alpha: true, // Enable alpha channel for transparent background
+          });
 
           // Set initial size - will be updated when image is loaded
           const initialWidth = image ? Math.min(image.width, MAX_WIDTH) : 512;
@@ -81,6 +107,9 @@ const DitheringCanvas = forwardRef(
             : 512;
 
           renderer.current.setSize(initialWidth, initialHeight);
+
+          // Set clear color to transparent
+          renderer.current.setClearColor(0x000000, 0);
 
           if (canvasRef.current) {
             canvasRef.current.innerHTML = ""; // Clear any existing content
@@ -95,10 +124,32 @@ const DitheringCanvas = forwardRef(
           const geometry = new THREE.PlaneGeometry(2, 2);
 
           // Create shader material with pre-loaded shaders
+          // Ensure the background color is properly converted from hex to RGB
+          const bgColor = parseHexColor(backgroundColor);
+          const fgColor = parseHexColor(foregroundColor);
+          console.log(
+            "Initial background color:",
+            backgroundColor,
+            "RGB:",
+            bgColor.r,
+            bgColor.g,
+            bgColor.b
+          );
+          console.log(
+            "Initial foreground color:",
+            foregroundColor,
+            "RGB:",
+            fgColor.r,
+            fgColor.g,
+            fgColor.b
+          );
+
           material.current = new THREE.ShaderMaterial({
             uniforms: {
               uTexture: { value: null },
               uThreshold: { value: threshold },
+              uBackgroundColor: { value: bgColor },
+              uForegroundColor: { value: fgColor },
             },
             vertexShader: shaders.vertex,
             fragmentShader: getCurrentShader(),
@@ -108,6 +159,11 @@ const DitheringCanvas = forwardRef(
           scene.current.add(mesh.current);
 
           setIsInitialized(true);
+
+          // Initial render
+          if (renderer.current && scene.current && camera.current) {
+            renderer.current.render(scene.current, camera.current);
+          }
         } catch (error) {
           console.error("Error initializing Three.js scene:", error);
         }
@@ -189,6 +245,34 @@ const DitheringCanvas = forwardRef(
       }
     }, [threshold, isInitialized]);
 
+    // Update background color
+    useEffect(() => {
+      if (material.current && isInitialized) {
+        try {
+          // Ensure the color is properly converted from hex to RGB
+          const color = parseHexColor(backgroundColor);
+          console.log(
+            "Updated background color:",
+            backgroundColor,
+            "RGB:",
+            color.r,
+            color.g,
+            color.b
+          );
+
+          material.current.uniforms.uBackgroundColor.value = color;
+          material.current.needsUpdate = true;
+
+          // Trigger a render to update the scene with the new background color
+          if (renderer.current && scene.current && camera.current) {
+            renderer.current.render(scene.current, camera.current);
+          }
+        } catch (error) {
+          console.error("Error updating background color:", error);
+        }
+      }
+    }, [backgroundColor, isInitialized]);
+
     // Update shader when algorithm changes
     useEffect(() => {
       if (!material.current || !isInitialized) return;
@@ -262,6 +346,34 @@ const DitheringCanvas = forwardRef(
       return () => clearTimeout(timer);
     }, [algorithm, isInitialized, image]);
 
+    // Add an effect to update the foreground color
+    useEffect(() => {
+      if (material.current && isInitialized) {
+        try {
+          // Ensure the color is properly converted from hex to RGB
+          const color = parseHexColor(foregroundColor);
+          console.log(
+            "Updated foreground color:",
+            foregroundColor,
+            "RGB:",
+            color.r,
+            color.g,
+            color.b
+          );
+
+          material.current.uniforms.uForegroundColor.value = color;
+          material.current.needsUpdate = true;
+
+          // Trigger a render to update the scene with the new foreground color
+          if (renderer.current && scene.current && camera.current) {
+            renderer.current.render(scene.current, camera.current);
+          }
+        } catch (error) {
+          console.error("Error updating foreground color:", error);
+        }
+      }
+    }, [foregroundColor, isInitialized]);
+
     // Render loop
     useEffect(() => {
       if (
@@ -310,126 +422,133 @@ const DitheringCanvas = forwardRef(
     };
 
     const exportSVG = () => {
-      if (!renderer.current || !scene.current || !camera.current) return;
+      if (!renderer.current) return;
 
-      const width = renderer.current.domElement.width;
-      const height = renderer.current.domElement.height;
-      const canvas = renderer.current.domElement;
+      try {
+        // Get the canvas data
+        const canvas = renderer.current.domElement;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
 
-      // Create a temporary canvas to read pixel data
-      const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = width;
-      tempCanvas.height = height;
-      const tempCtx = tempCanvas.getContext("2d");
+        // Read the pixel data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        const width = canvas.width;
+        const height = canvas.height;
 
-      if (!tempCtx) return;
+        // Create SVG content
+        let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
 
-      // Draw the WebGL canvas to the temporary canvas
-      tempCtx.drawImage(canvas, 0, 0);
+        // Add background rectangle with the selected background color
+        svgContent += `<rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>`;
 
-      // Get ImageData from the temporary canvas
-      const imageData = tempCtx.getImageData(0, 0, width, height);
-      const pixels = imageData.data;
+        // Get the background color as RGB values for comparison
+        const bgColor = parseHexColor(backgroundColor);
+        const bgR = Math.round(bgColor.r * 255);
+        const bgG = Math.round(bgColor.g * 255);
+        const bgB = Math.round(bgColor.b * 255);
 
-      // Create a binary representation of the image (1 = black, 0 = white/transparent)
-      const binaryImage = new Array(height);
-      for (let y = 0; y < height; y++) {
-        binaryImage[y] = new Array(width);
-        for (let x = 0; x < width; x++) {
-          const index = (y * width + x) * 4;
-          binaryImage[y][x] =
-            pixels[index] < 128 &&
-            pixels[index + 1] < 128 &&
-            pixels[index + 2] < 128 &&
-            pixels[index + 3] > 0
-              ? 1
-              : 0;
+        // Create a binary representation of the image (1 = foreground, 0 = background)
+        const binaryImage = new Array(height);
+        for (let y = 0; y < height; y++) {
+          binaryImage[y] = new Array(width).fill(0);
+          for (let x = 0; x < width; x++) {
+            const index = (y * width + x) * 4;
+
+            // Check if pixel is significantly different from background color
+            const isNotBackground =
+              Math.abs(data[index] - bgR) > 30 ||
+              Math.abs(data[index + 1] - bgG) > 30 ||
+              Math.abs(data[index + 2] - bgB) > 30;
+
+            binaryImage[y][x] = isNotBackground ? 1 : 0;
+          }
         }
-      }
 
-      let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
-
-      // First pass: horizontal rectangles
-      const horizontalRects = [];
-      for (let y = 0; y < height; y++) {
-        let xStart = -1;
-        for (let x = 0; x < width; x++) {
-          if (binaryImage[y][x] === 1) {
-            if (xStart === -1) xStart = x; // Start a new rectangle
-          } else {
-            if (xStart !== -1) {
-              horizontalRects.push({
-                x: xStart,
+        // First pass: find horizontal runs
+        const horizontalRuns = [];
+        for (let y = 0; y < height; y++) {
+          let startX = -1;
+          for (let x = 0; x < width; x++) {
+            if (binaryImage[y][x] === 1) {
+              if (startX === -1) startX = x;
+            } else if (startX !== -1) {
+              horizontalRuns.push({
+                x: startX,
                 y: y,
-                width: x - xStart,
+                width: x - startX,
                 height: 1,
               });
-              xStart = -1; // Reset
+              startX = -1;
             }
           }
-        }
-        // Close row at the end
-        if (xStart !== -1) {
-          horizontalRects.push({
-            x: xStart,
-            y: y,
-            width: width - xStart,
-            height: 1,
-          });
-        }
-      }
-
-      // Second pass: merge vertically adjacent rectangles with the same width and x position
-      const mergedRects = [];
-      const usedIndices = new Set();
-
-      for (let i = 0; i < horizontalRects.length; i++) {
-        if (usedIndices.has(i)) continue;
-
-        const rect = horizontalRects[i];
-        let currentHeight = rect.height;
-        let j = i + 1;
-
-        // Look for adjacent rectangles below
-        while (j < horizontalRects.length) {
-          const nextRect = horizontalRects[j];
-          if (
-            nextRect.x === rect.x &&
-            nextRect.width === rect.width &&
-            nextRect.y === rect.y + currentHeight
-          ) {
-            currentHeight += nextRect.height;
-            usedIndices.add(j);
-            j++;
-          } else {
-            break;
+          // Don't forget the run that might end at the edge
+          if (startX !== -1) {
+            horizontalRuns.push({
+              x: startX,
+              y: y,
+              width: width - startX,
+              height: 1,
+            });
           }
         }
 
-        mergedRects.push({
-          x: rect.x,
-          y: rect.y,
-          width: rect.width,
-          height: currentHeight,
-        });
+        // Second pass: merge vertically adjacent runs with the same width and x position
+        const mergedRuns = [];
+        const usedIndices = new Set();
+
+        for (let i = 0; i < horizontalRuns.length; i++) {
+          if (usedIndices.has(i)) continue;
+
+          const run = horizontalRuns[i];
+          let currentHeight = run.height;
+          usedIndices.add(i);
+
+          // Look for adjacent runs below
+          let j = i + 1;
+          while (j < horizontalRuns.length) {
+            const nextRun = horizontalRuns[j];
+            if (
+              !usedIndices.has(j) &&
+              nextRun.x === run.x &&
+              nextRun.width === run.width &&
+              nextRun.y === run.y + currentHeight
+            ) {
+              currentHeight += nextRun.height;
+              usedIndices.add(j);
+              j++;
+            } else {
+              break;
+            }
+          }
+
+          mergedRuns.push({
+            x: run.x,
+            y: run.y,
+            width: run.width,
+            height: currentHeight,
+          });
+        }
+
+        // Add rectangles to SVG - use foregroundColor for foreground elements
+        for (const rect of mergedRuns) {
+          svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${foregroundColor}"/>`;
+        }
+
+        svgContent += `</svg>`;
+
+        // Convert to Blob and trigger download
+        const blob = new Blob([svgContent], { type: "image/svg+xml" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "dithered-image.svg";
+        link.click();
+
+        // Clean up
+        URL.revokeObjectURL(link.href);
+      } catch (error) {
+        console.error("Error exporting SVG:", error);
       }
-
-      // Add rectangles to SVG
-      for (const rect of mergedRects) {
-        svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="black"/>`;
-      }
-
-      svgContent += `</svg>`;
-
-      // Convert to Blob and trigger download
-      const blob = new Blob([svgContent], { type: "image/svg+xml" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "dithered-image.svg";
-      link.click();
-
-      // Clean up
-      URL.revokeObjectURL(link.href);
     };
 
     // Expose the saveImage function to the parent via ref
