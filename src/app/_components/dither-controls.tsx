@@ -22,6 +22,7 @@ type DitherControlsProps = {
   highlights: number;
   backgroundColor: string;
   foregroundColor: string;
+  ditherScale: number;
   onAlgorithmChange: (algorithm: DitheringAlgorithm) => void;
   onThresholdChange: (threshold: number) => void;
   onContrastChange: (contrast: number) => void;
@@ -29,6 +30,7 @@ type DitherControlsProps = {
   onHighlightsChange: (highlights: number) => void;
   onBackgroundColorChange: (color: string) => void;
   onForegroundColorChange: (color: string) => void;
+  onDitherScaleChange: (scale: number) => void;
   onSaveImage: () => void;
   onExportSVG: () => void;
   isSvgExporting: boolean;
@@ -44,6 +46,7 @@ const DitherControls = ({
   highlights,
   backgroundColor,
   foregroundColor,
+  ditherScale,
   onAlgorithmChange,
   onThresholdChange,
   onContrastChange,
@@ -51,6 +54,7 @@ const DitherControls = ({
   onHighlightsChange,
   onBackgroundColorChange,
   onForegroundColorChange,
+  onDitherScaleChange,
   onSaveImage,
   onExportSVG,
   isSvgExporting,
@@ -100,6 +104,7 @@ const DitherControls = ({
             min={0.5}
             max={2.0}
             step={0.01}
+            defaultValue={[1]}
             className="w-full opacity-90"
           />
           <Slider
@@ -118,7 +123,17 @@ const DitherControls = ({
             min={0.5}
             max={1.5}
             step={0.01}
-            className="w-full opacity-60"
+            className="w-full opacity-90"
+          />
+          <Slider
+            label={`Scale: ${ditherScale.toFixed(1)}x`}
+            value={[ditherScale]}
+            onValueChange={(value) => onDitherScaleChange(value[0])}
+            defaultValue={[1]}
+            min={0.5}
+            max={8.0}
+            step={0.1}
+            className="w-full opacity-80"
           />
         </div>
         <div className="flex items-center gap-5">

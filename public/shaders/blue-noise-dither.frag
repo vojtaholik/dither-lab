@@ -7,6 +7,7 @@ uniform vec3 uForegroundColor; // Foreground color
 uniform float uContrast; // Contrast adjustment
 uniform float uMidtones; // Midtones adjustment
 uniform float uHighlights; // Highlights adjustment
+uniform float uDitherScale; // Dither pattern scale
 varying vec2 vUv;
 
 // Blue noise function (approximation using multiple hash functions)
@@ -52,8 +53,8 @@ void main() {
     // Apply tone adjustments
     gray = adjustTone(gray);
     
-    // Generate blue noise threshold
-    float threshold = blueNoise(gl_FragCoord.xy);
+    // Generate blue noise threshold with scaled coordinates
+    float threshold = blueNoise(floor(gl_FragCoord.xy / uDitherScale));
     
     // Apply dithering
     float dithered = step(threshold + (1.0 - uThreshold), gray);

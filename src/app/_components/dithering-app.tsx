@@ -28,6 +28,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const [highlights, setHighlights] = useState(1.0);
   const [backgroundColor, setBackgroundColor] = useState("#0a0a0a");
   const [foregroundColor, setForegroundColor] = useState("#ffffff");
+  const [ditherScale, setDitherScale] = useState(1.0);
   const [isDragging, setIsDragging] = useState(false);
   const canvasRef = useRef<{
     saveImage: () => void;
@@ -78,6 +79,10 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
 
   const handleForegroundColorChange = (color: string) => {
     setForegroundColor(color);
+  };
+
+  const handleDitherScaleChange = (scale: number) => {
+    setDitherScale(scale);
   };
 
   const handleSaveImage = () => {
@@ -164,6 +169,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
               highlights={highlights}
               backgroundColor={backgroundColor}
               foregroundColor={foregroundColor}
+              ditherScale={ditherScale}
               shaders={shaders}
             />
           ) : (
@@ -193,6 +199,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             highlights={highlights}
             backgroundColor={backgroundColor}
             foregroundColor={foregroundColor}
+            ditherScale={ditherScale}
             onAlgorithmChange={handleAlgorithmChange}
             onThresholdChange={handleThresholdChange}
             onContrastChange={handleContrastChange}
@@ -200,6 +207,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             onHighlightsChange={handleHighlightsChange}
             onBackgroundColorChange={handleBackgroundColorChange}
             onForegroundColorChange={handleForegroundColorChange}
+            onDitherScaleChange={handleDitherScaleChange}
             onSaveImage={handleSaveImage}
             onExportSVG={handleExportSVG}
             onImageLoad={handleImageLoad}

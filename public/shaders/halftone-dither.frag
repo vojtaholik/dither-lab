@@ -7,6 +7,7 @@ uniform vec3 uForegroundColor; // Foreground color
 uniform float uContrast; // Contrast adjustment
 uniform float uMidtones; // Midtones adjustment
 uniform float uHighlights; // Highlights adjustment
+uniform float uDitherScale; // Dither pattern scale
 varying vec2 vUv;
 
 // Apply contrast, midtones, and highlights adjustments to grayscale value
@@ -36,8 +37,8 @@ void main() {
     // Apply tone adjustments
     gray = adjustTone(gray);
     
-    // Calculate halftone pattern
-    float dotSize = 8.0 * (1.0 + uThreshold); // Adjust dot size based on threshold
+    // Calculate halftone pattern with scale
+    float dotSize = 8.0 * uDitherScale * (1.0 + uThreshold); // Adjust dot size based on threshold and scale
     vec2 center = floor(gl_FragCoord.xy / dotSize) * dotSize + (dotSize / 2.0);
     float dist = distance(gl_FragCoord.xy, center);
     

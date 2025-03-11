@@ -7,6 +7,7 @@ uniform vec3 uForegroundColor; // Foreground color
 uniform float uContrast; // Contrast adjustment
 uniform float uMidtones; // Midtones adjustment
 uniform float uHighlights; // Highlights adjustment
+uniform float uDitherScale; // Dither pattern scale
 varying vec2 vUv;
 
 // 8x8 Bayer threshold matrix as a 1D array
@@ -48,9 +49,9 @@ void main() {
     // Apply tone adjustments
     gray = adjustTone(gray);
 
-    // Get screen coordinates for the Bayer matrix lookup
-    int x = int(mod(gl_FragCoord.x, 8.0));
-    int y = int(mod(gl_FragCoord.y, 8.0));
+    // Get screen coordinates for the Bayer matrix lookup, scaled by uDitherScale
+    int x = int(mod(gl_FragCoord.x / uDitherScale, 8.0));
+    int y = int(mod(gl_FragCoord.y / uDitherScale, 8.0));
     
     // Calculate 1D index from 2D coordinates
     int index = y * 8 + x;

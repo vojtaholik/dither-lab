@@ -13,6 +13,7 @@ function Slider({
   label,
   min = 0,
   max = 100,
+  onValueChange,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
   label?: string;
@@ -27,6 +28,38 @@ function Slider({
     [value, defaultValue, min, max]
   );
 
+  // Store the initial value to use for reset
+  const initialValueRef = React.useRef<number[] | undefined>(
+    Array.isArray(value)
+      ? [...value]
+      : Array.isArray(defaultValue)
+      ? [...defaultValue]
+      : undefined
+  );
+
+  // Handle double-click to reset to default value
+  const handleDoubleClick = React.useCallback(() => {
+    if (!onValueChange) return;
+
+    // First priority: Use the defaultValue if provided
+    if (defaultValue !== undefined) {
+      onValueChange(
+        Array.isArray(defaultValue) ? defaultValue : [defaultValue]
+      );
+      return;
+    }
+
+    // Second priority: Use the initial value if we captured it
+    if (initialValueRef.current) {
+      onValueChange(initialValueRef.current);
+      return;
+    }
+
+    // Last resort: Reset to middle of range
+    const middleValue = min + (max - min) / 2;
+    onValueChange([middleValue]);
+  }, [defaultValue, min, max, onValueChange]);
+
   return (
     <SliderPrimitive.Root
       data-slot="slider"
@@ -38,6 +71,7 @@ function Slider({
         "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
         className
       )}
+      onValueChange={onValueChange}
       {...props}
     >
       <SliderPrimitive.Track
@@ -45,6 +79,7 @@ function Slider({
         className={cn(
           "bg-muted relative grow overflow-hidden data-[orientation=horizontal]:h-5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5"
         )}
+        onDoubleClick={handleDoubleClick}
       >
         <SliderPrimitive.Range
           data-slot="slider-range"

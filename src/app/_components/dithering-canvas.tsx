@@ -20,6 +20,7 @@ type DitheringCanvasProps = {
   highlights: number;
   backgroundColor: string;
   foregroundColor: string;
+  ditherScale: number;
   shaders: {
     vertex: string;
     bayer: string;
@@ -81,6 +82,7 @@ const DitheringCanvas = forwardRef(
       highlights,
       backgroundColor,
       foregroundColor,
+      ditherScale,
       shaders,
     }: DitheringCanvasProps,
     ref
@@ -225,6 +227,7 @@ const DitheringCanvas = forwardRef(
               uContrast: { value: contrast },
               uMidtones: { value: midtones },
               uHighlights: { value: highlights },
+              uDitherScale: { value: ditherScale },
             },
             vertexShader: shaders.vertex,
             fragmentShader: getCurrentShader(),
@@ -815,9 +818,9 @@ const DitheringCanvas = forwardRef(
       }
     }, [isInitialized, image, resizeRenderer]);
 
-    // Update the material uniforms when props change
+    // Update uniforms when props change
     useEffect(() => {
-      if (!material.current) return;
+      if (!material.current || !isInitialized) return;
 
       material.current.uniforms.uThreshold.value = threshold;
       material.current.uniforms.uBackgroundColor.value =
@@ -827,8 +830,9 @@ const DitheringCanvas = forwardRef(
       material.current.uniforms.uContrast.value = contrast;
       material.current.uniforms.uMidtones.value = midtones;
       material.current.uniforms.uHighlights.value = highlights;
+      material.current.uniforms.uDitherScale.value = ditherScale;
 
-      // Trigger a render
+      // Render the scene with updated uniforms
       if (renderer.current && scene.current && camera.current) {
         renderer.current.render(scene.current, camera.current);
       }
@@ -839,6 +843,8 @@ const DitheringCanvas = forwardRef(
       contrast,
       midtones,
       highlights,
+      ditherScale,
+      isInitialized,
     ]);
 
     return (
