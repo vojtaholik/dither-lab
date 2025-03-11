@@ -385,22 +385,6 @@ const DitheringCanvas = forwardRef(
         if (material.current && image) {
           console.log("Reapplying image after algorithm change");
 
-          // Calculate dimensions while preserving aspect ratio
-          let width = image.width;
-          let height = image.height;
-
-          // Limit height to MAX_HEIGHT while preserving aspect ratio
-          if (height > MAX_HEIGHT) {
-            const aspectRatio = width / height;
-            height = MAX_HEIGHT;
-            width = Math.round(height * aspectRatio);
-          }
-
-          // Update renderer size to match image dimensions
-          if (renderer.current && canvasRef.current) {
-            renderer.current.setSize(width, height);
-          }
-
           // Ensure texture is still valid
           if (!texture.current || texture.current.image !== image) {
             // Create new texture if needed
@@ -418,11 +402,16 @@ const DitheringCanvas = forwardRef(
           // Update the uniform
           material.current.uniforms.uTexture.value = texture.current;
           material.current.needsUpdate = true;
+
+          // Use our consistent resize function instead of custom sizing logic
+          requestAnimationFrame(() => {
+            resizeRenderer();
+          });
         }
       }, 100);
 
       return () => clearTimeout(timer);
-    }, [algorithm, isInitialized, image]);
+    }, [algorithm, isInitialized, image, resizeRenderer]);
 
     // Add an effect to update the foreground color
     useEffect(() => {
