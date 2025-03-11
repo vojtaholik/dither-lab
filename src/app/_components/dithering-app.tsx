@@ -41,7 +41,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
       console.error("Error loading default image:", err);
     };
     defaultImg.src =
-      process.env.NEXT_PUBLIC_DEFAULT_IMAGE_URL || "default-image.jpg";
+      process.env.NEXT_PUBLIC_DEFAULT_IMAGE_URL || "default-image.png";
   }, []);
 
   const handleImageLoad = (img: HTMLImageElement) => {
