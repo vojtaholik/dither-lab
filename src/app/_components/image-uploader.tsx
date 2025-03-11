@@ -98,7 +98,7 @@ const ImageUploader = ({ onImageLoad, externalFile }: ImageUploaderProps) => {
   const filename = currentFile?.name || fileInputRef.current?.files?.[0]?.name;
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 md:-mt-6 md:-mx-6">
       <input
         type="file"
         accept="image/*"
@@ -113,8 +113,10 @@ const ImageUploader = ({ onImageLoad, externalFile }: ImageUploaderProps) => {
           isDraggingOver
             ? "bg-gray-400 text-gray-900"
             : "bg-gray-200 text-gray-800"
-        } cursor-pointer hover:bg-white/10 bg-white/5 text-white border-dashed transition-colors duration-200 border ${
-          isDraggingOver ? "border-white" : "border-gray-700"
+        } cursor-pointer hover:bg-white/10 bg-white/5 text-white transition-colors duration-200 ${
+          isDraggingOver
+            ? "border border-dashed border-white"
+            : "border-gray-700"
         }`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
@@ -128,7 +130,7 @@ const ImageUploader = ({ onImageLoad, externalFile }: ImageUploaderProps) => {
           backgroundPosition: "center",
         }}
       >
-        <span className="text-sm absolute left-2 bottom-2 bg-black/50 px-2 py-1 rounded">
+        <span className="text-sm md:absolute left-2 bottom-2 md:bg-black/50 bg-black px-2 py-1 rounded">
           {!filename && (
             <>{isDraggingOver ? "Drop Image Here" : "Upload Image"}</>
           )}

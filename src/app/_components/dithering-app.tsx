@@ -184,7 +184,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             </p>
           )}
         </div>
-        <div className="w-full md:col-span-4 lg:col-span-3 bg-gray-900 px-6 border-l border-white/10 overflow-y-auto min-h-screen md:max-h-screen">
+        <div className="w-full md:col-span-4 lg:col-span-3 bg-gray-900 px-6 border-l border-white/10">
           <DitherControls
             algorithm={algorithm}
             threshold={threshold}

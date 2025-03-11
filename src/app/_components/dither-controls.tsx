@@ -58,8 +58,8 @@ const DitherControls = ({
   externalFile,
 }: DitherControlsProps) => {
   return (
-    <div className="flex flex-col h-screen justify-between gap-6 py-6">
-      <fieldset className="flex flex-col gap-6">
+    <div className="flex md:flex-col flex-col-reverse md:h-screen justify-between gap-6 py-6">
+      <fieldset className="flex md:flex-col flex-col-reverse gap-6">
         <ImageUploader onImageLoad={onImageLoad} externalFile={externalFile} />
         <div>
           <Label>Algorithm</Label>
@@ -176,7 +176,7 @@ const DitherControls = ({
           </div>
         </div>
       </fieldset>
-      <div className="flex gap-2 flex-col pt-5">
+      <div className="flex gap-2 flex-col md:pt-5">
         <Button onClick={onSaveImage}>Save Image</Button>
         <Button
           variant="secondary"
