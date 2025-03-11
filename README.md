@@ -1,8 +1,6 @@
 # Dither Lab
 
-<img width="1440" alt="image" src="https://github.com/user-attachments/assets/6f70df99-092c-432e-8e46-e1c83e9290fe" />
-
----
+<img width="1375" alt="image" src="https://github.com/user-attachments/assets/54208b8d-26f5-49c2-b702-0482acc62e22" />
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
