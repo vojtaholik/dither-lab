@@ -23,7 +23,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [algorithm, setAlgorithm] = useState<DitheringAlgorithm>("bayer");
   const [threshold, setThreshold] = useState(0.5);
-  const [backgroundColor, setBackgroundColor] = useState("#000000");
+  const [backgroundColor, setBackgroundColor] = useState("#0a0a0a");
   const [foregroundColor, setForegroundColor] = useState("#ffffff");
   const [isDragging, setIsDragging] = useState(false);
   const canvasRef = useRef<{
