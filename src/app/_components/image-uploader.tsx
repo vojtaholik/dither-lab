@@ -71,12 +71,12 @@ const ImageUploader = ({ onImageLoad }: ImageUploaderProps) => {
       />
       <label
         htmlFor="image-upload"
-        className={`px-4 py-2 ${
+        className={`px-4 py-2 aspect-video w-full flex items-center justify-center ${
           isDraggingOver
             ? "bg-gray-400 text-gray-900"
             : "bg-gray-200 text-gray-800"
-        } rounded cursor-pointer hover:bg-gray-300 inline-block transition-colors duration-200 border-2 ${
-          isDraggingOver ? "border-white" : "border-transparent"
+        } rounded cursor-pointer hover:bg-gray-300 bg-white/5 text-white border-dashed transition-colors duration-200 border ${
+          isDraggingOver ? "border-white" : "border-gray-700"
         }`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
@@ -85,6 +85,10 @@ const ImageUploader = ({ onImageLoad }: ImageUploaderProps) => {
       >
         {isDraggingOver ? "Drop Image Here" : "Upload Image"}
       </label>
+      {/* filename */}
+      <p className="text-sm text-gray-500">
+        {fileInputRef.current?.files?.[0]?.name}
+      </p>
     </div>
   );
 };

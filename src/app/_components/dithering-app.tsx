@@ -152,7 +152,6 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
           )}
         </div>
         <div className="w-full max-w-sm  bg-gray-900 p-5 border border-white/5">
-          <ImageUploader onImageLoad={handleImageLoad} />
           <DitherControls
             algorithm={algorithm}
             threshold={threshold}
@@ -164,6 +163,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             onForegroundColorChange={handleForegroundColorChange}
             onSaveImage={handleSaveImage}
             onExportSVG={handleExportSVG}
+            onImageLoad={handleImageLoad}
             isSvgExporting={isSvgExporting}
           />
         </div>

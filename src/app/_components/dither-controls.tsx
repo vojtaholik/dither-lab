@@ -1,5 +1,6 @@
 "use client";
 
+import ImageUploader from "./image-uploader";
 import { DitheringAlgorithm } from "./utils/shader-loader";
 
 type DitherControlsProps = {
@@ -14,6 +15,7 @@ type DitherControlsProps = {
   onSaveImage: () => void;
   onExportSVG: () => void;
   isSvgExporting: boolean;
+  onImageLoad: (image: HTMLImageElement) => void;
 };
 
 const DitherControls = ({
@@ -28,9 +30,11 @@ const DitherControls = ({
   onSaveImage,
   onExportSVG,
   isSvgExporting,
+  onImageLoad,
 }: DitherControlsProps) => {
   return (
-    <div className="flex flex-col gap-4 p-4 rounded-lg">
+    <div className="flex flex-col h-screen justify-center gap-4 p-4 rounded-lg">
+      <ImageUploader onImageLoad={onImageLoad} />
       <div>
         <label className="block mb-2 font-medium">Dithering Algorithm</label>
         <select
