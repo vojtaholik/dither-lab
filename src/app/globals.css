@@ -129,14 +129,22 @@ body {
   animation: pulse 1.5s infinite;
 }
 
+select,
+button,
+[data-slot="slider-track"] {
+  transition: all 0.1s ease-in-out;
+}
+
 /* input select button hover blink animation fast */
-input:hover,
 select:hover,
 button:hover,
 [data-slot="slider-track"]:hover {
-  animation: retro-blink 0.4s steps(4) 1;
+  /* animation: retro-blink 0.1s; */
   transform-origin: center;
   position: relative;
+  filter: brightness(1.3) contrast(1.1);
+  transform: scale(1.02);
+  transition: all 0.1s ease-in-out;
 }
 
 @keyframes retro-blink {
@@ -145,24 +153,9 @@ button:hover,
     transform: scale(1);
   }
 
-  25% {
+  100% {
     filter: brightness(1.3) contrast(1.1);
     transform: scale(1.02);
-  }
-
-  50% {
-    filter: brightness(0.9) contrast(1.2);
-    transform: scale(0.98);
-  }
-
-  75% {
-    filter: brightness(1.2) contrast(1.1);
-    transform: scale(1.01);
-  }
-
-  100% {
-    filter: brightness(1) contrast(1);
-    transform: scale(1);
   }
 }
 

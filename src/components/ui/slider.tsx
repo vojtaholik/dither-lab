@@ -77,7 +77,7 @@ function Slider({
       <SliderPrimitive.Track
         data-slot="slider-track"
         className={cn(
-          "bg-muted relative grow overflow-hidden data-[orientation=horizontal]:h-5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5"
+          "bg-muted relative grow overflow-hidden data-[orientation=horizontal]:h-10 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5"
         )}
         onDoubleClick={handleDoubleClick}
       >
@@ -88,7 +88,9 @@ function Slider({
           )}
         />
         {label && (
-          <div className="absolute left-1 text-sm text-white">{label}</div>
+          <div className="absolute left-1 h-10 flex items-center justify-center pl-2 text-sm text-white">
+            {label}
+          </div>
         )}
         <EffectCorners />
       </SliderPrimitive.Track>
