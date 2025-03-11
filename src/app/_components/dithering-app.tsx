@@ -136,11 +136,8 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
           </div>
         </div>
       )}
-      <div className="flex md:flex-row flex-col w-full h-full">
-        <div
-          className="w-full md:w-3/4 lg:w-4/5 p-4 flex items-center justify-center min-h-screen"
-          style={{ height: "100vh" }}
-        >
+      <div className="md:grid flex flex-col grid-cols-12 w-full h-full">
+        <div className="w-full md:col-span-8 md:min-h-screen lg:col-span-9 p-4 flex items-center justify-center">
           {image ? (
             <DitheringCanvas
               ref={canvasRef}
@@ -169,7 +166,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             </p>
           )}
         </div>
-        <div className="w-full md:w-1/4 lg:w-1/5 bg-gray-900 px-6 border-l border-white/10 overflow-y-auto min-h-screen md:max-h-screen">
+        <div className="w-full md:col-span-4 lg:col-span-3 bg-gray-900 px-6 border-l border-white/10 overflow-y-auto min-h-screen md:max-h-screen">
           <DitherControls
             algorithm={algorithm}
             threshold={threshold}
