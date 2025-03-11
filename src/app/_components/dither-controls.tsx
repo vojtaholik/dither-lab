@@ -13,6 +13,7 @@ type DitherControlsProps = {
   onForegroundColorChange: (color: string) => void;
   onSaveImage: () => void;
   onExportSVG: () => void;
+  isSvgExporting: boolean;
 };
 
 const DitherControls = ({
@@ -26,6 +27,7 @@ const DitherControls = ({
   onForegroundColorChange,
   onSaveImage,
   onExportSVG,
+  isSvgExporting,
 }: DitherControlsProps) => {
   return (
     <div className="flex flex-col gap-4 p-4 rounded-lg">
@@ -121,9 +123,12 @@ const DitherControls = ({
       </button>
       <button
         onClick={onExportSVG}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        disabled={isSvgExporting}
+        className={`px-4 py-2 bg-blue-500 text-white rounded ${
+          isSvgExporting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+        }`}
       >
-        Export SVG
+        {isSvgExporting ? "Exporting SVG..." : "Export SVG"}
       </button>
     </div>
   );

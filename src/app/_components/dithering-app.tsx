@@ -27,6 +27,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const canvasRef = useRef<{
     saveImage: () => void;
     exportSVG: () => void;
+    isSvgExporting: boolean;
   } | null>(null);
 
   // Load default image on component mount
@@ -69,6 +70,9 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
     canvasRef.current?.exportSVG();
   };
 
+  // Get the SVG exporting state for the UI
+  const isSvgExporting = canvasRef.current?.isSvgExporting || false;
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-center">
@@ -102,6 +106,7 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
             onForegroundColorChange={handleForegroundColorChange}
             onSaveImage={handleSaveImage}
             onExportSVG={handleExportSVG}
+            isSvgExporting={isSvgExporting}
           />
         </div>
       </div>

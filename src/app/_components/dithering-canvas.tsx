@@ -61,6 +61,7 @@ const DitheringCanvas = forwardRef(
     const mesh = useRef<THREE.Mesh | null>(null);
     const texture = useRef<THREE.Texture | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isSvgExporting, setIsSvgExporting] = useState(false);
 
     // Get current shader based on algorithm
     const getCurrentShader = () => {
@@ -422,139 +423,310 @@ const DitheringCanvas = forwardRef(
     };
 
     const exportSVG = () => {
-      if (!renderer.current) return;
-
-      try {
-        // Get the canvas data
-        const canvas = renderer.current.domElement;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        // Read the pixel data
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        const width = canvas.width;
-        const height = canvas.height;
-
-        // Create SVG content
-        let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
-
-        // Add background rectangle with the selected background color
-        svgContent += `<rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>`;
-
-        // Get the background color as RGB values for comparison
-        const bgColor = parseHexColor(backgroundColor);
-        const bgR = Math.round(bgColor.r * 255);
-        const bgG = Math.round(bgColor.g * 255);
-        const bgB = Math.round(bgColor.b * 255);
-
-        // Create a binary representation of the image (1 = foreground, 0 = background)
-        const binaryImage = new Array(height);
-        for (let y = 0; y < height; y++) {
-          binaryImage[y] = new Array(width).fill(0);
-          for (let x = 0; x < width; x++) {
-            const index = (y * width + x) * 4;
-
-            // Check if pixel is significantly different from background color
-            const isNotBackground =
-              Math.abs(data[index] - bgR) > 30 ||
-              Math.abs(data[index + 1] - bgG) > 30 ||
-              Math.abs(data[index + 2] - bgB) > 30;
-
-            binaryImage[y][x] = isNotBackground ? 1 : 0;
-          }
-        }
-
-        // First pass: find horizontal runs
-        const horizontalRuns = [];
-        for (let y = 0; y < height; y++) {
-          let startX = -1;
-          for (let x = 0; x < width; x++) {
-            if (binaryImage[y][x] === 1) {
-              if (startX === -1) startX = x;
-            } else if (startX !== -1) {
-              horizontalRuns.push({
-                x: startX,
-                y: y,
-                width: x - startX,
-                height: 1,
-              });
-              startX = -1;
-            }
-          }
-          // Don't forget the run that might end at the edge
-          if (startX !== -1) {
-            horizontalRuns.push({
-              x: startX,
-              y: y,
-              width: width - startX,
-              height: 1,
-            });
-          }
-        }
-
-        // Second pass: merge vertically adjacent runs with the same width and x position
-        const mergedRuns = [];
-        const usedIndices = new Set();
-
-        for (let i = 0; i < horizontalRuns.length; i++) {
-          if (usedIndices.has(i)) continue;
-
-          const run = horizontalRuns[i];
-          let currentHeight = run.height;
-          usedIndices.add(i);
-
-          // Look for adjacent runs below
-          let j = i + 1;
-          while (j < horizontalRuns.length) {
-            const nextRun = horizontalRuns[j];
-            if (
-              !usedIndices.has(j) &&
-              nextRun.x === run.x &&
-              nextRun.width === run.width &&
-              nextRun.y === run.y + currentHeight
-            ) {
-              currentHeight += nextRun.height;
-              usedIndices.add(j);
-              j++;
-            } else {
-              break;
-            }
-          }
-
-          mergedRuns.push({
-            x: run.x,
-            y: run.y,
-            width: run.width,
-            height: currentHeight,
-          });
-        }
-
-        // Add rectangles to SVG - use foregroundColor for foreground elements
-        for (const rect of mergedRuns) {
-          svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${foregroundColor}"/>`;
-        }
-
-        svgContent += `</svg>`;
-
-        // Convert to Blob and trigger download
-        const blob = new Blob([svgContent], { type: "image/svg+xml" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "dithered-image.svg";
-        link.click();
-
-        // Clean up
-        URL.revokeObjectURL(link.href);
-      } catch (error) {
-        console.error("Error exporting SVG:", error);
+      if (!renderer.current || !scene.current || !camera.current) {
+        console.error(
+          "Cannot export SVG: renderer, scene, or camera is not initialized"
+        );
+        return;
       }
+
+      // Set loading state
+      setIsSvgExporting(true);
+      console.log("Starting SVG export...");
+
+      // Force a render to ensure the canvas is up to date
+      renderer.current.render(scene.current, camera.current);
+
+      // Use setTimeout to ensure the rendering is complete before reading pixels
+      setTimeout(() => {
+        try {
+          const canvas = renderer.current!.domElement;
+          const width = canvas.width;
+          const height = canvas.height;
+
+          console.log(`Canvas dimensions: ${width}x${height}`);
+
+          // Create a temporary canvas to read pixel data
+          const tempCanvas = document.createElement("canvas");
+          tempCanvas.width = width;
+          tempCanvas.height = height;
+          const tempCtx = tempCanvas.getContext("2d");
+
+          if (!tempCtx) {
+            console.error("Failed to get 2D context for temporary canvas");
+            setIsSvgExporting(false);
+            return;
+          }
+
+          // Draw the WebGL canvas to the temporary canvas
+          tempCtx.drawImage(canvas, 0, 0);
+
+          // Read the pixel data
+          const imageData = tempCtx.getImageData(0, 0, width, height);
+          const pixels = imageData.data;
+
+          console.log(
+            `Background color: ${backgroundColor}, Foreground color: ${foregroundColor}`
+          );
+
+          // Parse background color for comparison
+          const bgColor = parseHexColor(backgroundColor);
+          const bgR = Math.round(bgColor.r * 255);
+          const bgG = Math.round(bgColor.g * 255);
+          const bgB = Math.round(bgColor.b * 255);
+
+          console.log(`Background RGB: ${bgR}, ${bgG}, ${bgB}`);
+
+          // Start building the SVG
+          let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+          // Add background rectangle
+          svgContent += `<rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"/>`;
+
+          // For large images, use a simplified approach with downsampling
+          const MAX_DIMENSION = 300; // Maximum dimension for detailed SVG
+
+          if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+            console.log("Large image detected, using simplified SVG export");
+
+            // Calculate downsampling factor
+            const downsampleFactor = Math.max(
+              Math.ceil(width / MAX_DIMENSION),
+              Math.ceil(height / MAX_DIMENSION)
+            );
+
+            console.log(`Downsampling by factor of ${downsampleFactor}`);
+
+            // Create downsampled grid
+            const gridWidth = Math.ceil(width / downsampleFactor);
+            const gridHeight = Math.ceil(height / downsampleFactor);
+            const grid: boolean[][] = Array(gridHeight)
+              .fill(0)
+              .map(() => Array(gridWidth).fill(false));
+
+            // Fill the grid by sampling pixels
+            for (let y = 0; y < gridHeight; y++) {
+              for (let x = 0; x < gridWidth; x++) {
+                // Sample the center of each grid cell
+                const centerX = Math.min(
+                  x * downsampleFactor + Math.floor(downsampleFactor / 2),
+                  width - 1
+                );
+                const centerY = Math.min(
+                  y * downsampleFactor + Math.floor(downsampleFactor / 2),
+                  height - 1
+                );
+
+                const i = (centerY * width + centerX) * 4;
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+
+                // Determine if this pixel is significantly different from the background
+                const isDifferent =
+                  Math.abs(r - bgR) > 15 ||
+                  Math.abs(g - bgG) > 15 ||
+                  Math.abs(b - bgB) > 15;
+
+                grid[y][x] = isDifferent;
+              }
+            }
+
+            // Create rectangles from the grid
+            for (let y = 0; y < gridHeight; y++) {
+              for (let x = 0; x < gridWidth; x++) {
+                if (grid[y][x]) {
+                  const rectX = x * downsampleFactor;
+                  const rectY = y * downsampleFactor;
+                  const rectWidth = Math.min(downsampleFactor, width - rectX);
+                  const rectHeight = Math.min(downsampleFactor, height - rectY);
+
+                  svgContent += `<rect x="${rectX}" y="${rectY}" width="${rectWidth}" height="${rectHeight}" fill="${foregroundColor}"/>`;
+                }
+              }
+            }
+          } else {
+            // For smaller images, use the original detailed approach
+            // Create a binary representation of the image (true = foreground pixel)
+            const pixelMap: boolean[][] = [];
+            for (let y = 0; y < height; y++) {
+              pixelMap[y] = [];
+              for (let x = 0; x < width; x++) {
+                const i = (y * width + x) * 4;
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+
+                // Determine if this pixel is significantly different from the background
+                const isDifferent =
+                  Math.abs(r - bgR) > 15 ||
+                  Math.abs(g - bgG) > 15 ||
+                  Math.abs(b - bgB) > 15;
+
+                pixelMap[y][x] = isDifferent;
+              }
+            }
+
+            // Find and merge horizontal runs of foreground pixels
+            const rects = [];
+
+            for (let y = 0; y < height; y++) {
+              let runStart = -1;
+
+              for (let x = 0; x <= width; x++) {
+                // Check if we're at a foreground pixel or at the end of the row
+                const isForegound = x < width && pixelMap[y][x];
+
+                if (isForegound && runStart === -1) {
+                  // Start of a new run
+                  runStart = x;
+                } else if (!isForegound && runStart !== -1) {
+                  // End of a run, create a rectangle
+                  rects.push({
+                    x: runStart,
+                    y: y,
+                    width: x - runStart,
+                    height: 1,
+                  });
+                  runStart = -1;
+                }
+              }
+            }
+
+            console.log(`Found ${rects.length} horizontal runs`);
+
+            // If there are too many rectangles, use a simplified approach
+            const MAX_RECTS = 10000;
+
+            if (rects.length > MAX_RECTS) {
+              console.log(
+                `Too many rectangles (${rects.length}), using simplified merging`
+              );
+
+              // Sort rectangles by y-coordinate for more efficient processing
+              rects.sort((a, b) => a.y - b.y || a.x - b.x);
+
+              // Take a sample of rectangles (every nth rectangle)
+              const samplingRate = Math.ceil(rects.length / MAX_RECTS);
+              const sampledRects = [];
+
+              for (let i = 0; i < rects.length; i += samplingRate) {
+                sampledRects.push(rects[i]);
+              }
+
+              console.log(`Sampled down to ${sampledRects.length} rectangles`);
+
+              // Add all sampled rectangles to the SVG
+              for (const rect of sampledRects) {
+                svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${foregroundColor}"/>`;
+              }
+            } else {
+              // For a reasonable number of rectangles, perform merging
+              if (rects.length === 0) {
+                console.warn(
+                  "No foreground pixels detected. SVG may be empty except for background."
+                );
+              } else {
+                // Use a more efficient merging algorithm
+                // Group rectangles by y-coordinate
+                const rectsByY = new Map();
+
+                for (const rect of rects) {
+                  if (!rectsByY.has(rect.y)) {
+                    rectsByY.set(rect.y, []);
+                  }
+                  rectsByY.get(rect.y).push(rect);
+                }
+
+                // Merge vertically adjacent rectangles with the same x and width
+                const mergedRects = [];
+                const processed = new Set();
+
+                // Process each y-coordinate group
+                const yValues = Array.from(rectsByY.keys()).sort(
+                  (a, b) => a - b
+                );
+
+                for (let i = 0; i < yValues.length; i++) {
+                  const y = yValues[i];
+                  const rectsAtY = rectsByY.get(y);
+
+                  for (const rect of rectsAtY) {
+                    if (processed.has(rect)) continue;
+
+                    let currentRect = { ...rect };
+                    processed.add(rect);
+
+                    // Look for rectangles below with the same x and width
+                    let currentY = y;
+                    let foundMatch = true;
+
+                    while (foundMatch && currentY < height - 1) {
+                      foundMatch = false;
+                      const nextY = currentY + 1;
+
+                      if (rectsByY.has(nextY)) {
+                        const candidates = rectsByY.get(nextY);
+
+                        for (const candidate of candidates) {
+                          if (
+                            !processed.has(candidate) &&
+                            candidate.x === currentRect.x &&
+                            candidate.width === currentRect.width
+                          ) {
+                            // Merge this rectangle
+                            currentRect.height += candidate.height;
+                            processed.add(candidate);
+                            currentY = nextY;
+                            foundMatch = true;
+                            break;
+                          }
+                        }
+                      }
+                    }
+
+                    mergedRects.push(currentRect);
+                  }
+                }
+
+                console.log(`Merged into ${mergedRects.length} rectangles`);
+
+                // Add all rectangles to the SVG
+                for (const rect of mergedRects) {
+                  svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${foregroundColor}"/>`;
+                }
+              }
+            }
+          }
+
+          // Close the SVG
+          svgContent += "</svg>";
+
+          // Create a download link
+          const blob = new Blob([svgContent], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "dithered-image.svg";
+          link.click();
+
+          // Clean up
+          URL.revokeObjectURL(url);
+          console.log("SVG export completed successfully");
+        } catch (error) {
+          console.error("Error exporting SVG:", error);
+        } finally {
+          // Reset loading state
+          setIsSvgExporting(false);
+        }
+      }, 100); // Small delay to ensure rendering is complete
     };
 
     // Expose the saveImage function to the parent via ref
     useImperativeHandle(ref, () => ({
       saveImage,
       exportSVG,
+      isSvgExporting,
     }));
 
     return <div ref={canvasRef} className="" />;
