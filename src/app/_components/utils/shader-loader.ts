@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 export type DitheringAlgorithm = "bayer" | "random" | "blue-noise" | "halftone";
 
 // Cache for loaded shaders
@@ -13,11 +16,7 @@ export const loadShader = async (path: string): Promise<string> => {
   if (typeof window === "undefined") {
     try {
       // Use Node.js fs to read the file from the file system
-      const fs = require("fs");
-      const { join } = require("path");
-
-      // Adjust path to point to the public directory
-      const filePath = join(process.cwd(), "public", path);
+      const filePath = `${process.cwd()}/public/${path}`;
       const shader = fs.readFileSync(filePath, "utf8");
 
       shaderCache[path] = shader;

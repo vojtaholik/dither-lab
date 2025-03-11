@@ -5,10 +5,10 @@ const nextConfig: NextConfig = {
   experimental: {
     turbo: {
       resolveExtensions: [".frag", ".vert", ".glsl", ".tsx", ".ts", ".js"],
-      loaders: {
-        ".frag": ["text"],
-        ".vert": ["text"],
-        ".glsl": ["text"],
+      rules: {
+        "*.frag": ["text"],
+        "*.vert": ["text"],
+        "*.glsl": ["text"],
       },
     },
   },
