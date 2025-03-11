@@ -17,10 +17,16 @@ import { Button } from "@/components/ui/button";
 type DitherControlsProps = {
   algorithm: DitheringAlgorithm;
   threshold: number;
+  contrast: number;
+  midtones: number;
+  highlights: number;
   backgroundColor: string;
   foregroundColor: string;
   onAlgorithmChange: (algorithm: DitheringAlgorithm) => void;
   onThresholdChange: (threshold: number) => void;
+  onContrastChange: (contrast: number) => void;
+  onMidtonesChange: (midtones: number) => void;
+  onHighlightsChange: (highlights: number) => void;
   onBackgroundColorChange: (color: string) => void;
   onForegroundColorChange: (color: string) => void;
   onSaveImage: () => void;
@@ -33,10 +39,16 @@ type DitherControlsProps = {
 const DitherControls = ({
   algorithm,
   threshold,
+  contrast,
+  midtones,
+  highlights,
   backgroundColor,
   foregroundColor,
   onAlgorithmChange,
   onThresholdChange,
+  onContrastChange,
+  onMidtonesChange,
+  onHighlightsChange,
   onBackgroundColorChange,
   onForegroundColorChange,
   onSaveImage,
@@ -78,6 +90,35 @@ const DitherControls = ({
             max={1}
             step={0.01}
             className="w-full"
+          />
+        </div>
+        <div>
+          <Slider
+            label={`Contrast: ${contrast.toFixed(2)}`}
+            value={[contrast]}
+            onValueChange={(value) => onContrastChange(value[0])}
+            min={0.5}
+            max={2.0}
+            step={0.01}
+            className="w-full opacity-90"
+          />
+          <Slider
+            label={`Midtones: ${midtones.toFixed(2)}`}
+            value={[midtones]}
+            onValueChange={(value) => onMidtonesChange(value[0])}
+            min={0}
+            max={1}
+            step={0.01}
+            className="w-full opacity-80"
+          />
+          <Slider
+            label={`Highlights: ${highlights.toFixed(2)}`}
+            value={[highlights]}
+            onValueChange={(value) => onHighlightsChange(value[0])}
+            min={0.5}
+            max={1.5}
+            step={0.01}
+            className="w-full opacity-60"
           />
         </div>
         <div className="flex items-center gap-5">

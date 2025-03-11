@@ -1,36 +1,62 @@
 precision mediump float;
 
 uniform sampler2D uTexture;
-uniform float uThreshold;
+uniform float uThreshold; // Dithering intensity
 uniform vec3 uBackgroundColor; // Background color
 uniform vec3 uForegroundColor; // Foreground color
+uniform float uContrast; // Contrast adjustment
+uniform float uMidtones; // Midtones adjustment
+uniform float uHighlights; // Highlights adjustment
 varying vec2 vUv;
 
-// Hash function for blue noise
-vec3 hash33(vec3 p) {
-    p = fract(p * vec3(443.8975, 397.2973, 491.1871));
-    p += dot(p.zxy, p.yxz + 19.19);
-    return fract(vec3(p.x * p.y, p.y * p.z, p.z * p.x));
+// Blue noise function (approximation using multiple hash functions)
+float blueNoise(vec2 coord) {
+    // Use multiple hash functions with different frequencies
+    vec2 seed1 = coord * 0.01;
+    vec2 seed2 = coord * 0.51;
+    vec2 seed3 = coord * 1.73;
+    
+    // Hash functions with different weights
+    float hash1 = fract(sin(dot(seed1, vec2(12.9898, 78.233))) * 43758.5453);
+    float hash2 = fract(sin(dot(seed2, vec2(63.7264, 10.873))) * 51357.8642);
+    float hash3 = fract(sin(dot(seed3, vec2(36.9572, 25.4645))) * 61268.9721);
+    
+    // Combine with different weights to approximate blue noise
+    return (hash1 * 0.5 + hash2 * 0.3 + hash3 * 0.2);
 }
 
-// Blue noise function
-float blueNoise(vec2 coord) {
-    vec3 p = vec3(coord, fract(1.0 + uThreshold * 0.1));
-    vec3 noise = hash33(p);
-    return (noise.x + noise.y + noise.z) / 3.0;
+// Apply contrast, midtones, and highlights adjustments to grayscale value
+float adjustTone(float gray) {
+    // Apply contrast (centered around 0.5)
+    float contrastAdjusted = (gray - 0.5) * uContrast + 0.5;
+    
+    // Apply midtones adjustment (sigmoid curve)
+    float midPoint = uMidtones;
+    float midtonesAdjusted = contrastAdjusted < midPoint 
+        ? contrastAdjusted * (contrastAdjusted / midPoint) 
+        : 1.0 - (1.0 - contrastAdjusted) * ((1.0 - contrastAdjusted) / (1.0 - midPoint));
+    
+    // Apply highlights adjustment
+    float highlightsAdjusted = midtonesAdjusted < 0.5 
+        ? midtonesAdjusted 
+        : 0.5 + (midtonesAdjusted - 0.5) * uHighlights;
+    
+    // Clamp to valid range
+    return clamp(highlightsAdjusted, 0.0, 1.0);
 }
 
 void main() {
     vec3 color = texture2D(uTexture, vUv).rgb;
     float gray = dot(color, vec3(0.3, 0.59, 0.11)); // Convert to grayscale
     
-    // Get blue noise value
-    float noise = blueNoise(gl_FragCoord.xy);
+    // Apply tone adjustments
+    gray = adjustTone(gray);
     
-    // Apply blue noise dithering with threshold adjustment
-    // The threshold adjustment makes the dithering more or less intense
-    float adjustedThreshold = mix(0.0, 1.0, uThreshold);
-    float dithered = step(noise * adjustedThreshold, gray);
+    // Generate blue noise threshold
+    float threshold = blueNoise(gl_FragCoord.xy);
+    
+    // Apply dithering
+    float dithered = step(threshold + (1.0 - uThreshold), gray);
     
     // Mix between background color and foreground color based on dithered value
     vec3 finalColor = mix(uBackgroundColor, uForegroundColor, dithered);

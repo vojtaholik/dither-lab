@@ -23,6 +23,9 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [algorithm, setAlgorithm] = useState<DitheringAlgorithm>("bayer");
   const [threshold, setThreshold] = useState(0.5);
+  const [contrast, setContrast] = useState(1.0);
+  const [midtones, setMidtones] = useState(0.5);
+  const [highlights, setHighlights] = useState(1.0);
   const [backgroundColor, setBackgroundColor] = useState("#0a0a0a");
   const [foregroundColor, setForegroundColor] = useState("#ffffff");
   const [isDragging, setIsDragging] = useState(false);
@@ -55,6 +58,18 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
 
   const handleThresholdChange = (value: number) => {
     setThreshold(value);
+  };
+
+  const handleContrastChange = (value: number) => {
+    setContrast(value);
+  };
+
+  const handleMidtonesChange = (value: number) => {
+    setMidtones(value);
+  };
+
+  const handleHighlightsChange = (value: number) => {
+    setHighlights(value);
   };
 
   const handleBackgroundColorChange = (color: string) => {
@@ -144,6 +159,9 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
               image={image}
               algorithm={algorithm}
               threshold={threshold}
+              contrast={contrast}
+              midtones={midtones}
+              highlights={highlights}
               backgroundColor={backgroundColor}
               foregroundColor={foregroundColor}
               shaders={shaders}
@@ -170,10 +188,16 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
           <DitherControls
             algorithm={algorithm}
             threshold={threshold}
+            contrast={contrast}
+            midtones={midtones}
+            highlights={highlights}
             backgroundColor={backgroundColor}
             foregroundColor={foregroundColor}
             onAlgorithmChange={handleAlgorithmChange}
             onThresholdChange={handleThresholdChange}
+            onContrastChange={handleContrastChange}
+            onMidtonesChange={handleMidtonesChange}
+            onHighlightsChange={handleHighlightsChange}
             onBackgroundColorChange={handleBackgroundColorChange}
             onForegroundColorChange={handleForegroundColorChange}
             onSaveImage={handleSaveImage}

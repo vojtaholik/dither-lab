@@ -15,6 +15,9 @@ type DitheringCanvasProps = {
   image: HTMLImageElement | null;
   algorithm: DitheringAlgorithm;
   threshold: number;
+  contrast: number;
+  midtones: number;
+  highlights: number;
   backgroundColor: string;
   foregroundColor: string;
   shaders: {
@@ -73,6 +76,9 @@ const DitheringCanvas = forwardRef(
       image,
       algorithm,
       threshold,
+      contrast,
+      midtones,
+      highlights,
       backgroundColor,
       foregroundColor,
       shaders,
@@ -216,6 +222,9 @@ const DitheringCanvas = forwardRef(
               uThreshold: { value: threshold },
               uBackgroundColor: { value: bgColor },
               uForegroundColor: { value: fgColor },
+              uContrast: { value: contrast },
+              uMidtones: { value: midtones },
+              uHighlights: { value: highlights },
             },
             vertexShader: shaders.vertex,
             fragmentShader: getCurrentShader(),
@@ -805,6 +814,32 @@ const DitheringCanvas = forwardRef(
         return () => clearTimeout(timeoutId);
       }
     }, [isInitialized, image, resizeRenderer]);
+
+    // Update the material uniforms when props change
+    useEffect(() => {
+      if (!material.current) return;
+
+      material.current.uniforms.uThreshold.value = threshold;
+      material.current.uniforms.uBackgroundColor.value =
+        parseHexColor(backgroundColor);
+      material.current.uniforms.uForegroundColor.value =
+        parseHexColor(foregroundColor);
+      material.current.uniforms.uContrast.value = contrast;
+      material.current.uniforms.uMidtones.value = midtones;
+      material.current.uniforms.uHighlights.value = highlights;
+
+      // Trigger a render
+      if (renderer.current && scene.current && camera.current) {
+        renderer.current.render(scene.current, camera.current);
+      }
+    }, [
+      threshold,
+      backgroundColor,
+      foregroundColor,
+      contrast,
+      midtones,
+      highlights,
+    ]);
 
     return (
       <div

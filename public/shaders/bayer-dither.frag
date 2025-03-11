@@ -4,6 +4,9 @@ uniform sampler2D uTexture;
 uniform float uThreshold; // Dithering intensity
 uniform vec3 uBackgroundColor; // Background color
 uniform vec3 uForegroundColor; // Foreground color
+uniform float uContrast; // Contrast adjustment
+uniform float uMidtones; // Midtones adjustment
+uniform float uHighlights; // Highlights adjustment
 varying vec2 vUv;
 
 // 8x8 Bayer threshold matrix as a 1D array
@@ -18,9 +21,32 @@ const float bayer[64] = float[64](
     63.0, 31.0, 55.0, 23.0, 61.0, 29.0, 53.0, 21.0
 );
 
+// Apply contrast, midtones, and highlights adjustments to grayscale value
+float adjustTone(float gray) {
+    // Apply contrast (centered around 0.5)
+    float contrastAdjusted = (gray - 0.5) * uContrast + 0.5;
+    
+    // Apply midtones adjustment (sigmoid curve)
+    float midPoint = uMidtones;
+    float midtonesAdjusted = contrastAdjusted < midPoint 
+        ? contrastAdjusted * (contrastAdjusted / midPoint) 
+        : 1.0 - (1.0 - contrastAdjusted) * ((1.0 - contrastAdjusted) / (1.0 - midPoint));
+    
+    // Apply highlights adjustment
+    float highlightsAdjusted = midtonesAdjusted < 0.5 
+        ? midtonesAdjusted 
+        : 0.5 + (midtonesAdjusted - 0.5) * uHighlights;
+    
+    // Clamp to valid range
+    return clamp(highlightsAdjusted, 0.0, 1.0);
+}
+
 void main() {
     vec3 color = texture2D(uTexture, vUv).rgb;
     float gray = dot(color, vec3(0.3, 0.59, 0.11)); // Convert to grayscale
+    
+    // Apply tone adjustments
+    gray = adjustTone(gray);
 
     // Get screen coordinates for the Bayer matrix lookup
     int x = int(mod(gl_FragCoord.x, 8.0));
