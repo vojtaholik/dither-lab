@@ -20,6 +20,16 @@ export const metadata: Metadata = {
     // { rel: "icon", sizes: "any", url: "/favicon.ico" },
     { rel: "icon", type: "image/svg+xml", url: "/favicon.svg" },
   ],
+  twitter: {
+    card: "summary_large_image",
+  },
+  openGraph: {
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_URL}/og-image.png`,
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
