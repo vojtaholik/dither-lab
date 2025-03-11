@@ -6,6 +6,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useState,
+  useCallback,
 } from "react";
 import * as THREE from "three";
 import { DitheringAlgorithm } from "./utils/shader-loader";
@@ -27,6 +28,38 @@ type DitheringCanvasProps = {
 
 // Maximum width for the rendered image
 const MAX_WIDTH = 1000;
+
+// Helper function to calculate dimensions while preserving aspect ratio
+const calculateDimensions = (
+  image: HTMLImageElement,
+  containerWidth: number,
+  containerHeight: number
+) => {
+  // Calculate the aspect ratio of the image
+  const imageAspectRatio = image.width / image.height;
+
+  // Start with the maximum available space
+  let width = containerWidth;
+  let height = width / imageAspectRatio;
+
+  // If height exceeds container, constrain by height
+  if (height > containerHeight) {
+    height = containerHeight;
+    width = height * imageAspectRatio;
+  }
+
+  // Apply MAX_WIDTH constraint if needed
+  if (width > MAX_WIDTH) {
+    width = MAX_WIDTH;
+    height = width / imageAspectRatio;
+  }
+
+  // Ensure dimensions are integers to avoid rendering issues
+  return {
+    width: Math.round(width),
+    height: Math.round(height),
+  };
+};
 
 // Helper function to parse hex color to RGB
 const parseHexColor = (hexColor: string) => {
@@ -54,6 +87,7 @@ const DitheringCanvas = forwardRef(
     ref
   ) => {
     const canvasRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const renderer = useRef<THREE.WebGLRenderer | null>(null);
     const scene = useRef<THREE.Scene | null>(null);
     const camera = useRef<THREE.OrthographicCamera | null>(null);
@@ -62,6 +96,50 @@ const DitheringCanvas = forwardRef(
     const texture = useRef<THREE.Texture | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
     const [isSvgExporting, setIsSvgExporting] = useState(false);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+    // Function to update container size
+    const updateContainerSize = useCallback(() => {
+      if (!containerRef.current) return;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth = containerRect.width;
+      const newHeight = containerRect.height;
+
+      // Only update if dimensions actually changed
+      if (
+        newWidth !== containerSize.width ||
+        newHeight !== containerSize.height
+      ) {
+        setContainerSize({
+          width: newWidth,
+          height: newHeight,
+        });
+      }
+    }, [containerSize]);
+
+    // Initialize container size and add resize listener
+    useEffect(() => {
+      // Initial size calculation
+      updateContainerSize();
+
+      // Create a ResizeObserver for more reliable size tracking
+      const resizeObserver = new ResizeObserver(() => {
+        updateContainerSize();
+      });
+
+      if (containerRef.current) {
+        resizeObserver.observe(containerRef.current);
+      }
+
+      // Also listen to window resize events for fallback
+      window.addEventListener("resize", updateContainerSize);
+
+      return () => {
+        resizeObserver.disconnect();
+        window.removeEventListener("resize", updateContainerSize);
+      };
+    }, [updateContainerSize]);
 
     // Get current shader based on algorithm
     const getCurrentShader = () => {
@@ -191,28 +269,44 @@ const DitheringCanvas = forwardRef(
       };
     }, [image]); // Include image in dependencies to reinitialize when image changes
 
+    // Update renderer size when container size or image changes
+    useEffect(() => {
+      if (
+        !image ||
+        !renderer.current ||
+        !isInitialized ||
+        containerSize.width === 0
+      )
+        return;
+
+      try {
+        // Calculate dimensions based on container size and image aspect ratio
+        const { width, height } = calculateDimensions(
+          image,
+          containerSize.width,
+          containerSize.height
+        );
+
+        console.log("Resizing renderer to:", width, height);
+
+        // Update renderer size
+        renderer.current.setSize(width, height);
+
+        // Trigger a render to update the scene with the new size
+        if (scene.current && camera.current) {
+          renderer.current.render(scene.current, camera.current);
+        }
+      } catch (error) {
+        console.error("Error resizing renderer:", error);
+      }
+    }, [image, isInitialized, containerSize]);
+
     // Update image texture
     useEffect(() => {
       if (!image || !material.current || !isInitialized) return;
 
       try {
         console.log("Updating image texture", image.width, image.height);
-
-        // Calculate dimensions while preserving aspect ratio
-        let width = image.width;
-        let height = image.height;
-
-        // Limit width to MAX_WIDTH while preserving aspect ratio
-        if (width > MAX_WIDTH) {
-          const aspectRatio = width / height;
-          width = MAX_WIDTH;
-          height = Math.round(width / aspectRatio);
-        }
-
-        // Update renderer size to match image dimensions
-        if (renderer.current && canvasRef.current) {
-          renderer.current.setSize(width, height);
-        }
 
         // Dispose of previous texture if it exists
         if (texture.current) {
@@ -729,7 +823,15 @@ const DitheringCanvas = forwardRef(
       isSvgExporting,
     }));
 
-    return <div ref={canvasRef} />;
+    return (
+      <div
+        ref={containerRef}
+        className="w-full h-full flex items-center justify-center"
+        style={{ minHeight: "200px" }}
+      >
+        <div ref={canvasRef} className="max-w-full max-h-full" />
+      </div>
+    );
   }
 );
 
