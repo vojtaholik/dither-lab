@@ -16,7 +16,7 @@ const LogoLink = () => {
   return (
     <a
       href="https://vojta.io?ref=dither-lab"
-      className="fixed md:left-3 p-3 group top-3 flex items-center gap-2"
+      className="fixed md:left-3 p-3 group top-3 flex z-[999] items-center gap-2"
       target="_blank"
     >
       <svg

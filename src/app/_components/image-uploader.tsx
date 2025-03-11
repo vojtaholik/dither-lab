@@ -1,13 +1,19 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { useRef, useState, useEffect } from "react";
 
 type ImageUploaderProps = {
   onImageLoad: (image: HTMLImageElement) => void;
   externalFile?: File | null; // Add prop for external file
+  className?: string;
 };
 
-const ImageUploader = ({ onImageLoad, externalFile }: ImageUploaderProps) => {
+const ImageUploader = ({
+  onImageLoad,
+  externalFile,
+  className,
+}: ImageUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -98,7 +104,7 @@ const ImageUploader = ({ onImageLoad, externalFile }: ImageUploaderProps) => {
   const filename = currentFile?.name || fileInputRef.current?.files?.[0]?.name;
 
   return (
-    <div className="mb-4 md:-mt-6 md:-mx-6">
+    <div className={cn("mb-4 md:-mt-6 md:-mx-6", className)}>
       <input
         type="file"
         accept="image/*"
