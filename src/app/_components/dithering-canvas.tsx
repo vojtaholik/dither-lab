@@ -23,6 +23,9 @@ type DitheringCanvasProps = {
   };
 };
 
+// Maximum width for the rendered image
+const MAX_WIDTH = 1000;
+
 const DitheringCanvas = forwardRef(
   ({ image, algorithm, threshold, shaders }: DitheringCanvasProps, ref) => {
     const canvasRef = useRef<HTMLDivElement>(null);
@@ -68,7 +71,16 @@ const DitheringCanvas = forwardRef(
             preserveDrawingBuffer: true,
             antialias: false,
           }); // Allow saving image
-          renderer.current.setSize(512, 512);
+
+          // Set initial size - will be updated when image is loaded
+          const initialWidth = image ? Math.min(image.width, MAX_WIDTH) : 512;
+          const initialHeight = image
+            ? image.width > MAX_WIDTH
+              ? Math.round(MAX_WIDTH / (image.width / image.height))
+              : image.height
+            : 512;
+
+          renderer.current.setSize(initialWidth, initialHeight);
 
           if (canvasRef.current) {
             canvasRef.current.innerHTML = ""; // Clear any existing content
@@ -120,7 +132,7 @@ const DitheringCanvas = forwardRef(
           mesh.current.geometry.dispose();
         }
       };
-    }, []); // Only run once on mount
+    }, [image]); // Include image in dependencies to reinitialize when image changes
 
     // Update image texture
     useEffect(() => {
@@ -128,6 +140,22 @@ const DitheringCanvas = forwardRef(
 
       try {
         console.log("Updating image texture", image.width, image.height);
+
+        // Calculate dimensions while preserving aspect ratio
+        let width = image.width;
+        let height = image.height;
+
+        // Limit width to MAX_WIDTH while preserving aspect ratio
+        if (width > MAX_WIDTH) {
+          const aspectRatio = width / height;
+          width = MAX_WIDTH;
+          height = Math.round(width / aspectRatio);
+        }
+
+        // Update renderer size to match image dimensions
+        if (renderer.current && canvasRef.current) {
+          renderer.current.setSize(width, height);
+        }
 
         // Dispose of previous texture if it exists
         if (texture.current) {
@@ -194,6 +222,22 @@ const DitheringCanvas = forwardRef(
       const timer = setTimeout(() => {
         if (material.current && image) {
           console.log("Reapplying image after algorithm change");
+
+          // Calculate dimensions while preserving aspect ratio
+          let width = image.width;
+          let height = image.height;
+
+          // Limit width to MAX_WIDTH while preserving aspect ratio
+          if (width > MAX_WIDTH) {
+            const aspectRatio = width / height;
+            width = MAX_WIDTH;
+            height = Math.round(width / aspectRatio);
+          }
+
+          // Update renderer size to match image dimensions
+          if (renderer.current && canvasRef.current) {
+            renderer.current.setSize(width, height);
+          }
 
           // Ensure texture is still valid
           if (!texture.current || texture.current.image !== image) {
@@ -268,8 +312,8 @@ const DitheringCanvas = forwardRef(
     const exportSVG = () => {
       if (!renderer.current || !scene.current || !camera.current) return;
 
-      const width = 512,
-        height = 512;
+      const width = renderer.current.domElement.width;
+      const height = renderer.current.domElement.height;
       const canvas = renderer.current.domElement;
 
       // Create a temporary canvas to read pixel data
@@ -394,7 +438,7 @@ const DitheringCanvas = forwardRef(
       exportSVG,
     }));
 
-    return <div ref={canvasRef} />;
+    return <div ref={canvasRef} className="" />;
   }
 );
 

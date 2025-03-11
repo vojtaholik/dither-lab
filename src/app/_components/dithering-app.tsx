@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import ImageUploader from "./image-uploader";
 import DitherControls from "./dither-controls";
 import DitheringCanvas from "./dithering-canvas";
@@ -27,6 +27,18 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
     exportSVG: () => void;
   } | null>(null);
 
+  // Load default image on component mount
+  useEffect(() => {
+    const defaultImg = new Image();
+    defaultImg.onload = () => {
+      setImage(defaultImg);
+    };
+    defaultImg.onerror = (err) => {
+      console.error("Error loading default image:", err);
+    };
+    defaultImg.src = "/default-image.jpg";
+  }, []);
+
   const handleImageLoad = (img: HTMLImageElement) => {
     setImage(img);
   };
@@ -48,21 +60,9 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
   };
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-1/3">
-          <ImageUploader onImageLoad={handleImageLoad} />
-          <DitherControls
-            algorithm={algorithm}
-            threshold={threshold}
-            onAlgorithmChange={handleAlgorithmChange}
-            onThresholdChange={handleThresholdChange}
-            onSaveImage={handleSaveImage}
-            onExportSVG={handleExportSVG}
-          />
-        </div>
-
-        <div className="w-full md:w-2/3">
+    <div className="w-full">
+      <div className="flex items-center justify-center">
+        <div className="w-full flex justify-center items-center h-screen">
           {image ? (
             <DitheringCanvas
               ref={canvasRef}
@@ -72,12 +72,21 @@ const DitheringApp = ({ shaders }: DitheringAppProps) => {
               shaders={shaders}
             />
           ) : (
-            <div className="flex items-center justify-center h-64  rounded-lg">
-              <p className="text-gray-500">
-                Upload an image to start dithering
-              </p>
+            <div className="flex items-center justify-center h-64 rounded-lg border border-gray-300 w-full">
+              <p className="text-gray-500">Loading default image...</p>
             </div>
           )}
+        </div>
+        <div className="w-full max-w-sm  bg-gray-900 p-5 border border-white/5">
+          <ImageUploader onImageLoad={handleImageLoad} />
+          <DitherControls
+            algorithm={algorithm}
+            threshold={threshold}
+            onAlgorithmChange={handleAlgorithmChange}
+            onThresholdChange={handleThresholdChange}
+            onSaveImage={handleSaveImage}
+            onExportSVG={handleExportSVG}
+          />
         </div>
       </div>
     </div>
